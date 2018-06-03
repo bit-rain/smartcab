@@ -48,7 +48,7 @@ class LearningAgent(Agent):
             #self.epsilon = math.pow(0.9,  self.times)
             #self.epsilon = 1 / float(math.pow(self.times, 2))
             #self.epsilon = math.pow(math.e, -1* 0.9 * self.times)
-            self.epsilon = (math.cos(0.01 * self.times) + 1 ) / 2
+            self.epsilon = math.cos(2./math.pi/300*self.times)
             self.times = self.times + 1
 
         return None
@@ -67,8 +67,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        #state = (waypoint, inputs['light'], inputs['oncoming'], deadline%2)
-        state = (waypoint, inputs['light'], deadline%4)
+        state = (waypoint, inputs['light'], inputs['left'], inputs['right'], inputs['oncoming'])
 
         return state
 
@@ -96,8 +95,11 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        if self.learning and  not self.Q.has_key(state):
-            self.Q[state] = {self.valid_actions[0]: 0.0, self.valid_actions[1]: 0.0, self.valid_actions[2]: 0.0, self.valid_actions[3]: 0.0}
+        #if self.learning and  not self.Q.has_key(state):
+            #self.Q[state] = {self.valid_actions[0]: 0.0, self.valid_actions[1]: 0.0, self.valid_actions[2]: 0.0, self.valid_actions[3]: 0.0}
+            
+        if self.learning:
+            self.Q.setdefault(state, {action: 0.0 for action in self.valid_actions})
 
         return
 
@@ -123,7 +125,8 @@ class LearningAgent(Agent):
             if random.random() < self.epsilon:
                 action = random.choice(self.valid_actions)
             else:
-                action = sorted(self.Q[state], key=lambda x:self.Q[state][x])[-1]
+                actions = filter(lambda x: max(self.Q[state].values())==self.Q[state][x], self.Q[state])
+                action = random.choice(actions)
  
         return action
 
@@ -176,7 +179,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning=True, epsilon=0.9, alpha=0.2)
+    agent = env.create_agent(LearningAgent, learning=True, epsilon=1, alpha=0.2)
     #agent = env.create_agent(LearningAgent, learning=True)
     
     ##############
